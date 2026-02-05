@@ -21,7 +21,7 @@
 
     <main class="w-full max-w-md space-y-6">
         <div id="time-alert" class="text-center p-3 bg-indigo-600/10 border border-indigo-500/20 rounded-xl text-indigo-400 text-sm mb-4">
-            সার্ভার সময় চেক হচ্ছে...
+            সার্ভার সময় চেক হচ্ছে...
         </div>
 
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-xl">
@@ -43,33 +43,50 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+        // Firebase Config (Realtime Database URL সহ)
         const firebaseConfig = {
             apiKey: "AIzaSyBH_JyNm8XLJq_kRtfDQzoNkFVtEkTgvmg",
             authDomain: "hall-meal-system.firebaseapp.com",
+            databaseURL: "https://hall-meal-system-default-rtdb.firebaseio.com",
             projectId: "hall-meal-system",
             storageBucket: "hall-meal-system.firebasestorage.app",
             messagingSenderId: "940828695438",
-            appId: "1:940828695438:web:d0e019f76923d9b62b62df",
-            measurementId: "G-TH65TL6GQ5"
+            appId: "1:940828695438:web:d0e019f76923d9b62b62df"
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
         const auth = getAuth(app);
 
+        // লগইন চেক এবং বর্তমান স্ট্যাটাস লোড করা
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = "login.html";
             } else {
                 const roll = user.email.split('@')[0];
                 document.getElementById('user-display').innerText = "রোল: " + roll;
+                loadCurrentStatus(roll);
                 checkServerTime();
             }
         });
 
+        // আজকের আগের সেভ করা ডাটা লোড করা
+        async function loadCurrentStatus(roll) {
+            const today = new Date().toISOString().split('T')[0];
+            const mealRef = ref(db, `meals/${today}/${roll}`);
+            const snapshot = await get(mealRef);
+            
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (data.morning) updateUI('morning', data.morning);
+                if (data.dinner) updateUI('dinner', data.dinner);
+            }
+        }
+
+        // সার্ভার সময় চেক করা
         async function checkServerTime() {
             try {
                 const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Dhaka');
@@ -77,45 +94,65 @@
                 const now = new Date(data.datetime);
                 const hour = now.getHours();
 
-                document.getElementById('time-alert').innerText = "সময়: " + now.toLocaleTimeString();
+                document.getElementById('time-alert').innerText = "সময়: " + now.toLocaleTimeString();
 
+                // সকালের মিল সকাল ৬টার পর লক
                 if (hour >= 6) lockMeal('morning-btn');
+                // রাতের মিল বিকাল ৪টার পর লক
                 if (hour >= 16) lockMeal('dinner-btn');
-            } catch (e) { console.log("Time fetch failed"); }
+            } catch (e) { 
+                console.log("Time fetch failed"); 
+                document.getElementById('time-alert').innerText = "সময় চেক করা যাচ্ছে না!";
+            }
         }
 
         function lockMeal(id) {
             const btn = document.getElementById(id);
             btn.disabled = true;
-            btn.innerText = "সময় শেষ";
+            btn.innerText = "সময় শেষ";
             btn.className = "w-full py-4 bg-slate-800 text-slate-500 rounded-2xl font-bold cursor-not-allowed";
         }
 
+        // মিল অন/অফ ফাংশন
         window.toggleMeal = async (type) => {
             const user = auth.currentUser;
             const badge = document.getElementById(`${type}-badge`);
-            const btn = document.getElementById(`${type}-btn`);
             const isOff = badge.innerText === "ON";
-            
             const newStatus = isOff ? "OFF" : "ON";
+            
             const today = new Date().toISOString().split('T')[0];
+            const roll = user.email.split('@')[0];
 
-            // Firebase Save
             try {
-                await setDoc(doc(db, "daily_meals", `${today}_${user.uid}`), {
-                    roll: user.email.split('@')[0],
+                // Realtime Database-এ সেভ করা
+                await update(ref(db, `meals/${today}/${roll}`), {
+                    roll: roll,
                     [type]: newStatus,
-                    date: today,
-                    lastUpdated: new Date()
-                }, { merge: true });
+                    lastUpdated: new Date().getTime()
+                });
 
-                // UI Update
-                badge.innerText = newStatus;
-                badge.className = newStatus === "ON" ? "px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-[10px] font-bold" : "px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-[10px] font-bold";
-                btn.innerText = newStatus === "ON" ? "OFF করুন" : "ON করুন";
-                btn.classList.toggle('bg-red-600', newStatus === "OFF");
-            } catch (e) { alert("সেভ করতে সমস্যা হয়েছে!"); }
+                updateUI(type, newStatus);
+            } catch (e) { 
+                alert("সেভ করতে সমস্যা হয়েছে! Rules চেক করুন।"); 
+            }
         };
+
+        // UI আপডেট করার জন্য কমন ফাংশন
+        function updateUI(type, status) {
+            const badge = document.getElementById(`${type}-badge`);
+            const btn = document.getElementById(`${type}-btn`);
+            
+            badge.innerText = status;
+            if (status === "ON") {
+                badge.className = "px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-[10px] font-bold";
+                btn.innerText = "OFF করুন";
+                btn.className = "w-full py-4 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-500 transition";
+            } else {
+                badge.className = "px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-[10px] font-bold";
+                btn.innerText = "ON করুন";
+                btn.className = "w-full py-4 bg-red-600 rounded-2xl font-bold hover:bg-red-500 transition";
+            }
+        }
 
         window.logout = () => signOut(auth).then(() => window.location.href = "login.html");
     </script>
