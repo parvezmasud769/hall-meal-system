@@ -15,7 +15,7 @@
                 <i class="fas fa-university text-4xl text-indigo-500"></i>
             </div>
             <h1 class="text-3xl font-bold italic tracking-tighter uppercase">Shahjalal <span class="text-indigo-500">Hall</span></h1>
-            <p class="text-slate-500 text-sm mt-2">আপনার রোল নম্বর দিয়ে লগইন করুন</p>
+            <p class="text-slate-500 text-sm mt-2">আপনার রোল নম্বর দিয়ে লগইন করুন</p>
         </div>
 
         <div class="bg-slate-900/50 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl backdrop-blur-xl">
@@ -25,7 +25,7 @@
                     <input type="number" id="roll" required placeholder="Ex: 20306006" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-2 ml-1">পাসওয়ার্ড</label>
+                    <label class="block text-sm font-medium text-slate-400 mb-2 ml-1">পাসওয়ার্ড</label>
                     <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
                 </div>
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95">
@@ -39,9 +39,11 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+        // Firebase Config (Realtime Database URL সহ আপডেট করা হয়েছে)
         const firebaseConfig = {
             apiKey: "AIzaSyBH_JyNm8XLJq_kRtfDQzoNkFVtEkTgvmg",
             authDomain: "hall-meal-system.firebaseapp.com",
+            databaseURL: "https://hall-meal-system-default-rtdb.firebaseio.com", //
             projectId: "hall-meal-system",
             storageBucket: "hall-meal-system.firebasestorage.app",
             messagingSenderId: "940828695438",
@@ -65,8 +67,8 @@
                     window.location.href = "index.html";
                 })
                 .catch((error) => {
-                    console.error(error);
-                    alert("ভুল রোল বা পাসওয়ার্ড!");
+                    console.error("Login Error:", error.code);
+                    alert("ভুল রোল বা পাসওয়ার্ড!");
                 });
         });
     </script>
