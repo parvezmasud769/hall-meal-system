@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Hall Meal System</title>
+    <title>Login | Shahjalal Hall Meal System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
 </head>
@@ -12,9 +12,9 @@
     <div class="w-full max-w-md">
         <div class="text-center mb-10">
             <div class="inline-block p-4 rounded-2xl bg-indigo-600/20 mb-4">
-                <i class="fas fa-utensils text-4xl text-indigo-500"></i>
+                <i class="fas fa-university text-4xl text-indigo-500"></i>
             </div>
-            <h1 class="text-3xl font-bold italic tracking-tighter">HALL <span class="text-indigo-500">MEAL</span></h1>
+            <h1 class="text-3xl font-bold italic tracking-tighter uppercase">Shahjalal <span class="text-indigo-500">Hall</span></h1>
             <p class="text-slate-500 text-sm mt-2">আপনার রোল নম্বর দিয়ে লগইন করুন</p>
         </div>
 
@@ -22,13 +22,15 @@
             <form id="login-form" class="space-y-6">
                 <div>
                     <label class="block text-sm font-medium text-slate-400 mb-2 ml-1">রোল নম্বর</label>
-                    <input type="number" id="roll" required placeholder="Ex: 123" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-indigo-500/50">
+                    <input type="number" id="roll" required placeholder="Ex: 20306006" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-400 mb-2 ml-1">পাসওয়ার্ড</label>
-                    <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-indigo-500/50">
+                    <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg">লগইন করুন</button>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95">
+                    লগইন করুন
+                </button>
             </form>
         </div>
     </div>
@@ -54,11 +56,18 @@
             e.preventDefault();
             const roll = document.getElementById('roll').value;
             const pass = document.getElementById('password').value;
-            const email = `${roll}@hall.com`;
+            
+            // আপনার দেওয়া নতুন ডোমেইন ফরম্যাট
+            const email = `${roll}@shahjalal.cu.hall.bd`;
 
             signInWithEmailAndPassword(auth, email, pass)
-                .then(() => { window.location.href = "index.html"; })
-                .catch(() => { alert("ভুল রোল বা পাসওয়ার্ড!"); });
+                .then(() => {
+                    window.location.href = "index.html";
+                })
+                .catch((error) => {
+                    console.error(error);
+                    alert("ভুল রোল বা পাসওয়ার্ড!");
+                });
         });
     </script>
 </body>
