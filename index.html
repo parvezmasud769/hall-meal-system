@@ -12,7 +12,7 @@
     <header class="w-full max-w-md flex justify-between items-center mb-10">
         <div>
             <h1 class="text-2xl font-bold text-indigo-400">Meal Control</h1>
-            <p id="user-display" class="text-slate-500 text-xs">রোল নম্বর লোড হচ্ছে...</p>
+            <p id="user-display" class="text-slate-500 text-xs italic font-mono">লোড হচ্ছে...</p>
         </div>
         <button onclick="logout()" class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-red-500 hover:bg-red-500/10 transition">
             <i class="fas fa-sign-out-alt"></i>
@@ -20,8 +20,8 @@
     </header>
 
     <main class="w-full max-w-md space-y-6">
-        <div id="time-alert" class="text-center p-3 bg-indigo-600/10 border border-indigo-500/20 rounded-xl text-indigo-400 text-sm mb-4">
-            সার্ভার সময় চেক হচ্ছে...
+        <div id="time-alert" class="text-center p-3 bg-indigo-600/10 border border-indigo-500/20 rounded-xl text-indigo-400 text-sm mb-4 font-mono">
+            সময় চেক হচ্ছে...
         </div>
 
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-xl">
@@ -29,7 +29,7 @@
                 <h2 class="text-lg font-bold">সকালের মিল (Morning)</h2>
                 <span id="morning-badge" class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-[10px] font-bold">ON</span>
             </div>
-            <button id="morning-btn" onclick="toggleMeal('morning')" class="w-full py-4 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-500 transition disabled:opacity-50">OFF করুন</button>
+            <button id="morning-btn" onclick="toggleMeal('morning')" class="w-full py-4 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-500 transition">OFF করুন</button>
         </div>
 
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-xl">
@@ -37,7 +37,7 @@
                 <h2 class="text-lg font-bold">রাতের মিল (Dinner)</h2>
                 <span id="dinner-badge" class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-[10px] font-bold">ON</span>
             </div>
-            <button id="dinner-btn" onclick="toggleMeal('dinner')" class="w-full py-4 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-500 transition disabled:opacity-50">OFF করুন</button>
+            <button id="dinner-btn" onclick="toggleMeal('dinner')" class="w-full py-4 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-500 transition">OFF করুন</button>
         </div>
     </main>
 
@@ -65,7 +65,7 @@
             else {
                 const roll = user.email.split('@')[0];
                 document.getElementById('user-display').innerText = "রোল: " + roll;
-                loadCurrentStatus(roll);
+                await loadCurrentStatus(roll);
                 checkServerTime();
             }
         });
@@ -83,7 +83,6 @@
         async function checkServerTime() {
             try {
                 const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Dhaka', { cache: "no-store" });
-                if (!res.ok) throw new Error();
                 const data = await res.json();
                 applyTimeLogic(new Date(data.datetime), false);
             } catch (e) {
@@ -94,15 +93,23 @@
         function applyTimeLogic(now, isLocal) {
             const hour = now.getHours();
             document.getElementById('time-alert').innerText = "সময়: " + now.toLocaleTimeString('bn-BD') + (isLocal ? " (Local)" : "");
-            if (hour >= 6) lockMeal('morning-btn');
-            if (hour >= 16) lockMeal('dinner-btn');
+            
+            // সকাল ৬টা থেকে রাত ১২টা পর্যন্ত সকালের মিল লক
+            if (hour >= 6 && hour < 24) {
+                lockMeal('morning-btn');
+            }
+            
+            // বিকাল ৪টা (১৬:০০) থেকে রাত ১২টা পর্যন্ত রাতের মিল লক
+            if (hour >= 16 && hour < 24) {
+                lockMeal('dinner-btn');
+            }
         }
 
         function lockMeal(id) {
             const btn = document.getElementById(id);
             btn.disabled = true;
             btn.innerText = "সময় শেষ";
-            btn.className = "w-full py-4 bg-slate-800 text-slate-500 rounded-2xl font-bold cursor-not-allowed";
+            btn.className = "w-full py-4 bg-slate-800 text-slate-500 rounded-2xl font-bold cursor-not-allowed opacity-60";
         }
 
         window.toggleMeal = async (type) => {
@@ -115,16 +122,24 @@
             try {
                 await update(ref(db, `meals/${today}/${roll}`), { [type]: newStatus, roll: roll });
                 updateUI(type, newStatus);
-            } catch (e) { alert("Error saving data!"); }
+            } catch (e) { alert("সেভ করতে সমস্যা হয়েছে!"); }
         };
 
         function updateUI(type, status) {
             const badge = document.getElementById(`${type}-badge`);
             const btn = document.getElementById(`${type}-btn`);
+            if(btn.disabled) return;
+
             badge.innerText = status;
-            badge.className = status === "ON" ? "px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-[10px] font-bold" : "px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-[10px] font-bold";
-            btn.innerText = status === "ON" ? "OFF করুন" : "ON করুন";
-            btn.className = status === "ON" ? "w-full py-4 bg-indigo-600 rounded-2xl font-bold" : "w-full py-4 bg-red-600 rounded-2xl font-bold";
+            if (status === "ON") {
+                badge.className = "px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-[10px] font-bold";
+                btn.innerText = "OFF করুন";
+                btn.className = "w-full py-4 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-500 transition";
+            } else {
+                badge.className = "px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-[10px] font-bold";
+                btn.innerText = "ON করুন";
+                btn.className = "w-full py-4 bg-red-600 rounded-2xl font-bold hover:bg-red-500 transition";
+            }
         }
 
         window.logout = () => signOut(auth).then(() => window.location.href = "login.html");
