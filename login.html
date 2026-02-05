@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Shahjalal Hall Meal System</title>
+    <title>Login | Shahjalal Hall</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
 </head>
@@ -15,7 +15,7 @@
                 <i class="fas fa-university text-4xl text-indigo-500"></i>
             </div>
             <h1 class="text-3xl font-bold italic tracking-tighter uppercase">Shahjalal <span class="text-indigo-500">Hall</span></h1>
-            <p class="text-slate-500 text-sm mt-2">আপনার রোল নম্বর দিয়ে লগইন করুন</p>
+            <p class="text-slate-500 text-sm mt-2">আপনার রোল নম্বর দিয়ে লগইন করুন</p>
         </div>
 
         <div class="bg-slate-900/50 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl backdrop-blur-xl">
@@ -39,16 +39,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Firebase Config (Realtime Database URL সহ আপডেট করা হয়েছে)
         const firebaseConfig = {
             apiKey: "AIzaSyBH_JyNm8XLJq_kRtfDQzoNkFVtEkTgvmg",
             authDomain: "hall-meal-system.firebaseapp.com",
-            databaseURL: "https://hall-meal-system-default-rtdb.firebaseio.com", //
+            databaseURL: "https://hall-meal-system-default-rtdb.firebaseio.com",
             projectId: "hall-meal-system",
             storageBucket: "hall-meal-system.firebasestorage.app",
             messagingSenderId: "940828695438",
-            appId: "1:940828695438:web:d0e019f76923d9b62b62df",
-            measurementId: "G-TH65TL6GQ5"
+            appId: "1:940828695438:web:d0e019f76923d9b62b62df"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -58,18 +56,11 @@
             e.preventDefault();
             const roll = document.getElementById('roll').value;
             const pass = document.getElementById('password').value;
-            
-            // আপনার দেওয়া নতুন ডোমেইন ফরম্যাট
             const email = `${roll}@shahjalal.cu.hall.bd`;
 
             signInWithEmailAndPassword(auth, email, pass)
-                .then(() => {
-                    window.location.href = "index.html";
-                })
-                .catch((error) => {
-                    console.error("Login Error:", error.code);
-                    alert("ভুল রোল বা পাসওয়ার্ড!");
-                });
+                .then(() => { window.location.href = "index.html"; })
+                .catch(() => { alert("ভুল রোল বা পাসওয়ার্ড!"); });
         });
     </script>
 </body>
