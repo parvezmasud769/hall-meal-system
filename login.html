@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Hall Meal System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-md">
+        <div class="text-center mb-10">
+            <div class="inline-block p-4 rounded-2xl bg-indigo-600/20 mb-4">
+                <i class="fas fa-utensils text-4xl text-indigo-500"></i>
+            </div>
+            <h1 class="text-3xl font-bold italic tracking-tighter">HALL <span class="text-indigo-500">MEAL</span></h1>
+            <p class="text-slate-500 text-sm mt-2">আপনার রোল নম্বর দিয়ে লগইন করুন</p>
+        </div>
+
+        <div class="bg-slate-900/50 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl backdrop-blur-xl">
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-2 ml-1">রোল নম্বর</label>
+                    <input type="number" id="roll" required placeholder="Ex: 123" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-indigo-500/50">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-2 ml-1">পাসওয়ার্ড</label>
+                    <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-indigo-500/50">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg">লগইন করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBH_JyNm8XLJq_kRtfDQzoNkFVtEkTgvmg",
+            authDomain: "hall-meal-system.firebaseapp.com",
+            projectId: "hall-meal-system",
+            storageBucket: "hall-meal-system.firebasestorage.app",
+            messagingSenderId: "940828695438",
+            appId: "1:940828695438:web:d0e019f76923d9b62b62df",
+            measurementId: "G-TH65TL6GQ5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const roll = document.getElementById('roll').value;
+            const pass = document.getElementById('password').value;
+            const email = `${roll}@hall.com`;
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => { window.location.href = "index.html"; })
+                .catch(() => { alert("ভুল রোল বা পাসওয়ার্ড!"); });
+        });
+    </script>
+</body>
+</html>

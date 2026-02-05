@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Hall Meal System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-6">
+
+    <header class="text-center mb-10">
+        <h1 class="text-3xl font-bold text-indigo-400">Hall Meal Control</h1>
+        <p id="time-display" class="text-slate-500 mt-2 text-sm">সার্ভার সময় চেক হচ্ছে...</p>
+    </header>
+
+    <main class="w-full max-w-md space-y-6">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Morning (সকাল)</h2>
+                <span id="morning-badge" class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold">ON</span>
+            </div>
+            <button id="morning-btn" onclick="handleMealToggle('morning')" class="w-full py-4 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-500 transition disabled:bg-slate-800 disabled:text-slate-600">OFF করুন</button>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Dinner (রাত)</h2>
+                <span id="dinner-badge" class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold">ON</span>
+            </div>
+            <button id="dinner-btn" onclick="handleMealToggle('dinner')" class="w-full py-4 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-500 transition disabled:bg-slate-800 disabled:text-slate-600">OFF করুন</button>
+        </div>
+        
+        <button onclick="logout()" class="w-full text-slate-500 text-sm mt-4 underline">লগ আউট</button>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBH_JyNm8XLJq_kRtfDQzoNkFVtEkTgvmg",
+            authDomain: "hall-meal-system.firebaseapp.com",
+            projectId: "hall-meal-system",
+            storageBucket: "hall-meal-system.firebasestorage.app",
+            messagingSenderId: "940828695438",
+            appId: "1:940828695438:web:d0e019f76923d9b62b62df",
+            measurementId: "G-TH65TL6GQ5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // লগইন চেক
+        onAuthStateChanged(auth, (user) => {
+            if (!user) window.location.href = "login.html";
+        });
+
+        // সার্ভার টাইম ও রেস্ট্রিকশন
+        async function checkTime() {
+            try {
+                const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Dhaka');
+                const data = await res.json();
+                const hour = new Date(data.datetime).getHours();
+                document.getElementById('time-display').innerText = "সার্ভার সময়: " + new Date(data.datetime).toLocaleTimeString();
+                
+                if (hour >= 6) { lockButton('morning-btn'); }
+                if (hour >= 16) { lockButton('dinner-btn'); }
+            } catch (e) { console.log("Time Fetch Error"); }
+        }
+
+        function lockButton(id) {
+            const btn = document.getElementById(id);
+            btn.disabled = true;
+            btn.innerText = "সময় শেষ";
+        }
+
+        // মিল অন-অফ ও ডাটাবেস আপডেট
+        window.handleMealToggle = async (type) => {
+            const badge = document.getElementById(`${type}-badge`);
+            const btn = document.getElementById(`${type}-btn`);
+            const user = auth.currentUser;
+            const newStatus = badge.innerText === "ON" ? "OFF" : "ON";
+
+            // UI Update
+            badge.innerText = newStatus;
+            badge.className = newStatus === "ON" ? "px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold" : "px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-bold";
+            btn.innerText = newStatus === "ON" ? "OFF করুন" : "ON করুন";
+            btn.classList.toggle('bg-slate-700');
+
+            // Save to Firestore
+            const today = new Date().toISOString().split('T')[0];
+            await setDoc(doc(db, "daily_meals", `${user.uid}_${today}`), {
+                userId: user.email.split('@')[0], // রোল নম্বর
+                type: type,
+                status: newStatus,
+                date: today
+            }, { merge: true });
+        };
+
+        window.logout = () => signOut(auth);
+
+        checkTime();
+        setInterval(checkTime, 60000);
+    </script>
+</body>
+</html>
